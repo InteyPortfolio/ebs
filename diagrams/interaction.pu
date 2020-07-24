@@ -1,0 +1,11 @@
+@startuml
+
+autonumber
+Markup -> Bus: subscribe(ObjectAdded)
+Actor -> Core: Import Object to task
+activate Core
+Core -> Core: start importing
+Core -> Bus: ObjectAdded
+deactivate Core
+
+@enduml

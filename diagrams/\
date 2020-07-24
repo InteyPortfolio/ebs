@@ -1,0 +1,8 @@
+@startuml
+
+autonumber
+Core -> Bus: ObjectAdded
+activate Bus
+
+
+@enduml
