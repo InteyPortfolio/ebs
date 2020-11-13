@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  rabbit:
+    image: rabbitmq:management
+    ports:
+      - "8001:15672"
+  datagen:
+    build: datagen/
+    ports:
+      - "8000:80"
+    depends_on:
+      - rabbit
+    environment:
+      - QUEUE_URL=rabbit:5672
+  distributor:
+    build: distribution/
+    environment:
+      - QUEUE_URL=rabbit:5672
+    depends_on:
+      - rabbit
+  processor:
+    build: processor/
+    environment:
+      - QUEUE_URL=rabbit:5672
+    depends_on:
+      - rabbit
+  statistics:
+    build: statistics/
+    environment:
+      - QUEUE_URL=rabbit:5672
+    depends_on:
+      - rabbit

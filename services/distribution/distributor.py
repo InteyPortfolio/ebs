@@ -1,5 +1,6 @@
 import pika
 from os import environ
+import sys
 import json
 from uuid import uuid4
 
@@ -26,6 +27,7 @@ class Distributor:
 
     def __init__(self, *args, **kwargs):
         host, port = environ.get("QUEUE_URL").split(":")
+        print(f"initialize. QUEUE_URL:'{host}:{port}'")
 
         self.conn = pika.BlockingConnection(pika.ConnectionParameters(host, port))
         self.channel = self.conn.channel()

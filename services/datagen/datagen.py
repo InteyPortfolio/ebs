@@ -19,6 +19,10 @@ app = FastAPI()
 EXCHANGE = "ebs"
 
 
+@app.get('/health')
+def health_check():
+    return "Ready"
+
 @app.get("/objects/{object_id}")
 def get_object(object_id: int) -> Object:
     return Object(id=object_id, name="dump", content="lorem?")

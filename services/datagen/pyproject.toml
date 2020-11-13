@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "service"
+name = "datagen"
 version = "0.1.0"
 description = ""
 authors = ["intey <ziexe0@gmail.com>"]

@@ -53,6 +53,7 @@ class Store:
 class Staistics:
     def __init__(self, id_: str, stats_db: Store):
         host, port = environ.get("QUEUE_URL").split(":")
+        print(f"initialize. QUEUE_URL:'{host}:{port}'")
         self.conn = pika.BlockingConnection(pika.ConnectionParameters(host, port))
         self.channel = self.conn.channel()
         self.id = id_
