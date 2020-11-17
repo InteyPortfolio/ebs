@@ -1,0 +1,106 @@
+$ crc ip
+192.168.32.103
+
+$ ping -n 4 default-route-openshift-image-registry.apps-crc.testing
+Pinging default-route-openshift-image-registry.apps-crc.testing [192.168.32.103] with 32 bytes of data:
+Reply from 192.168.32.103: bytes=32 time<1ms TTL=64
+Reply from 192.168.32.103: bytes=32 time<1ms TTL=64
+Reply from 192.168.32.103: bytes=32 time<1ms TTL=64
+Reply from 192.168.32.103: bytes=32 time<1ms TTL=64
+
+Ping statistics for 192.168.32.103:
+    Packets: Sent = 4, Received = 4, Lost = 0 (0% loss),
+Approximate round trip times in milli-seconds:
+    Minimum = 0ms, Maximum = 0ms, Average = 0ms
+
+$ oc get co image-registry -oyaml
+apiVersion: config.openshift.io/v1
+kind: ClusterOperator
+metadata:
+  creationTimestamp: "2020-10-26T04:08:33Z"
+  generation: 1
+  managedFields:
+  - apiVersion: config.openshift.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:spec: {}
+      f:status:
+        .: {}
+        f:extension: {}
+    manager: cluster-version-operator
+    operation: Update
+    time: "2020-10-26T04:08:33Z"
+  - apiVersion: config.openshift.io/v1
+    fieldsType: FieldsV1
+    fieldsV1:
+      f:status:
+        f:conditions: {}
+        f:relatedObjects: {}
+        f:versions: {}
+    manager: cluster-image-registry-operator
+    operation: Update
+    time: "2020-11-12T07:15:28Z"
+  name: image-registry
+  resourceVersion: "258977"
+  selfLink: /apis/config.openshift.io/v1/clusteroperators/image-registry
+  uid: d5d6975c-50cb-43e9-a0e8-07ced7f5dad1
+spec: {}
+status:
+  conditions:
+  - lastTransitionTime: "2020-11-12T07:15:20Z"
+    message: |-
+      Available: The registry is ready
+      ImagePrunerAvailable: Pruner CronJob has been created
+    reason: Ready
+    status: "True"
+    type: Available
+  - lastTransitionTime: "2020-11-12T07:15:28Z"
+    message: 'Progressing: The registry is ready'
+    reason: Ready
+    status: "False"
+    type: Progressing
+  - lastTransitionTime: "2020-10-26T04:17:44Z"
+    reason: AsExpected
+    status: "False"
+    type: Degraded
+  extension: null
+  relatedObjects:
+  - group: imageregistry.operator.openshift.io
+    name: cluster
+    resource: configs
+  - group: imageregistry.operator.openshift.io
+    name: cluster
+    resource: imagepruners
+  - group: rbac.authorization.k8s.io
+    name: system:registry
+    resource: clusterroles
+  - group: rbac.authorization.k8s.io
+    name: registry-registry-role
+    resource: clusterrolebindings
+  - group: rbac.authorization.k8s.io
+    name: openshift-image-registry-pruner
+    resource: clusterrolebindings
+  - group: ""
+    name: openshift-image-registry
+    resource: namespaces
+  versions:
+  - name: operator
+    version: 4.6.1
+
+$ oc get pods -A | grep image
+openshift-image-registry                     cluster-image-registry-operator-8455b85cc6-vswx5        1/1     Running            0          18d
+openshift-image-registry                     image-pruner-1603756800-2twdw                           0/1     Completed          0          17d
+openshift-image-registry                     image-registry-6f95ddfc55-djdlf                         1/1     Running            0          35h
+openshift-image-registry                     node-ca-t8xhg                                           1/1     Running            0          18d
+
+$ oc logs image-registry-6f95ddfc55-djdlf | tail -10
+time="2020-11-13T19:07:54.714133181Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=ecdc1bd4-57cc-416e-ab64-31c0e6016467 http.request.method=GET http.request.remoteaddr="10.116.0.1:52606" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="30.8µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:07:55.936300506Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=d22708fb-37d7-4584-a177-432593127325 http.request.method=GET http.request.remoteaddr="10.116.0.1:52636" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="29.7µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:04.714247952Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=8cddb71c-a512-4fe8-a42d-b9a9aca89985 http.request.method=GET http.request.remoteaddr="10.116.0.1:52806" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="66.9µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:05.935999778Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=393121fc-1828-48b2-baf4-2bb90b2b1ace http.request.method=GET http.request.remoteaddr="10.116.0.1:52834" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="32.299µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:14.714052424Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=d0f531e4-0ecf-4064-9501-2aa5f004d172 http.request.method=GET http.request.remoteaddr="10.116.0.1:53036" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="28.5µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:15.93599165Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=412c5e61-ed1c-4b2b-bc40-64765687af69 http.request.method=GET http.request.remoteaddr="10.116.0.1:53060" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="31.7µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:24.714066795Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=4ba962dd-69b1-466d-a99c-b1123da26a23 http.request.method=GET http.request.remoteaddr="10.116.0.1:53258" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="30.8µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:25.935927821Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=04dee635-498c-4ee6-bfae-4e1f24c09d7a http.request.method=GET http.request.remoteaddr="10.116.0.1:53286" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="31.799µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:34.713964467Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=b4612321-598c-42ef-ace9-2dafa3dfffd7 http.request.method=GET http.request.remoteaddr="10.116.0.1:53444" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="29.9µs" http.response.status=200 http.response.written=0
+time="2020-11-13T19:08:35.936059492Z" level=info msg=response go.version=go1.15.0 http.request.host="10.116.0.45:5000" http.request.id=952ca1fb-1817-4142-a0b5-095b8a90116a http.request.method=GET http.request.remoteaddr="10.116.0.1:53470" http.request.uri=/healthz http.request.useragent=kube-probe/1.19 http.response.duration="43.5µs" http.response.status=200 http.response.written=0
