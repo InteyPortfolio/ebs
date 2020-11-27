@@ -28,7 +28,7 @@ spec:
         - name: QUEUE_URL
           value: rabbit:5672
         image: datagen
-        imagePullPolicy: ""
+        imagePullPolicy: Never
         name: datagen
         ports:
         - containerPort: 80

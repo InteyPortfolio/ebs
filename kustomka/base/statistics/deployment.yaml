@@ -28,7 +28,7 @@ spec:
         - name: QUEUE_URL
           value: rabbit:5672
         image: statistics
-        imagePullPolicy: ""
+        imagePullPolicy: Never
         name: statistics
         resources: {}
       restartPolicy: Always

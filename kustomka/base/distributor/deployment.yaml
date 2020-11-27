@@ -28,7 +28,7 @@ spec:
         - name: QUEUE_URL
           value: rabbit:5672
         image: distributor
-        imagePullPolicy: ""
+        imagePullPolicy: Never
         name: distributor
         resources: {}
       restartPolicy: Always
