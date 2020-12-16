@@ -13,3 +13,8 @@ resources:
 
   - statistics/deployment.yaml
 
+
+configMapGenerator:
+  - name: queue.dsn
+    envs:
+      - ./configs/queue.env

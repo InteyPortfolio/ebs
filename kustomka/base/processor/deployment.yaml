@@ -24,11 +24,11 @@ spec:
         io.kompose.service: processor
     spec:
       containers:
-      - env:
-        - name: QUEUE_URL
-          value: rabbit:5672
-        image: processor
-        imagePullPolicy: Never
+      - image: processor
+        envFrom:
+        - configMapRef: 
+            name: queue.dsn
+        imagePullPolicy: IfNotPresent
         name: processor
         resources: {}
       restartPolicy: Always

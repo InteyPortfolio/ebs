@@ -5,10 +5,50 @@ though rabbitmq or similar.
 
 ## How to start
 
+You can start all system in 3 variants: manual, docker-compose or 
+minikube/minishift/crc. Last case tested only on minikube.
+
+
+For compose or minikube it's ok for services fails on first, because it's
+needed rabbitmq that may not started yet.
+
+### minishift
+
+I use kustomize for specs.
+
+```bash
+# use images from docker hub
+kustomize build kustomka/hubbed/ | kubectl apply -f -
+```
+
+after all, we can export ports:
+```bash
+
+# "curl -X POST localhost:8000/objects" and you get system starts
+kubectl port-forward deployment/datagen 8000:80
+
+# looks at statistcs (console)
+kubectl logs -f deployment/statistics
+
+# and for view rabbit management (for debugging)
+kubectl port-forward deployment/rabbit 15672
+```
+
+### docker-compose
+
+```bash
+cd services/
+docker-compose up -d
+```
+
+### Manual
+
+Manually it's little boring, but simple
+
 ```bash
 # any term
-docker run -d --hostname my-rabbit --name some-rabbit -p 5672:5672 -p 8080:15672
-rabbitmq:management
+docker run -d -p 5672:5672 -p 8080:15672
+rabbitmq:management-alpine
 
 # term 1
 cd services/datagen
@@ -31,6 +71,9 @@ cd services/statistics/
 poetry install && poetry shell
 QUEUE_URL=localhost:5672 python statistics.py
 ```
+
+### docker-compose
+
 
 Then POST to /api/objects without payload with curl/postman/etc.
 And you can see logs on each term. Statistics become on 4 term.

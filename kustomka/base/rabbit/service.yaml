@@ -13,6 +13,9 @@ spec:
   - name: "8001"
     port: 8001
     targetPort: 15672
+  - name: "base"
+    port: 5672
+    targetPort: 5672
   selector:
     io.kompose.service: rabbit
 status:

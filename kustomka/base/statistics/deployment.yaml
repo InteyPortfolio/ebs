@@ -24,11 +24,11 @@ spec:
         io.kompose.service: statistics
     spec:
       containers:
-      - env:
-        - name: QUEUE_URL
-          value: rabbit:5672
-        image: statistics
-        imagePullPolicy: Never
+      - image: statistics
+        envFrom:
+        - configMapRef: 
+            name: queue.dsn
+        imagePullPolicy: IfNotPresent
         name: statistics
         resources: {}
       restartPolicy: Always

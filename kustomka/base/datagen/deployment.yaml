@@ -24,12 +24,13 @@ spec:
         io.kompose.service: datagen
     spec:
       containers:
-      - env:
-        - name: QUEUE_URL
-          value: rabbit:5672
+      - name: datagen
+        envFrom:
+        - configMapRef: 
+            name: queue.dsn
         image: datagen
-        imagePullPolicy: Never
-        name: datagen
+        imagePullPolicy: IfNotPresent
+        
         ports:
         - containerPort: 80
         resources: {}
