@@ -18,3 +18,10 @@ configMapGenerator:
   - name: queue.dsn
     envs:
       - ./configs/queue.env
+  - name: distributor-conf
+    files:
+      - ./configs/distributor.json
+
+  - name: processor-conf
+    files:
+      - ./configs/processor.json

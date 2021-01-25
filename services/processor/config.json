@@ -1,0 +1,7 @@
+{
+  "process_time": "rnd",
+  "rnd": {
+    "min": 3,
+    "max": 5
+  }
+}

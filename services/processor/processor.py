@@ -21,12 +21,18 @@ EXCHANGE = "ebs"
 
 
 class Processor:
-    def __init__(self, id_: str):
+    def __init__(self, id_: str, config: dict):
         host, port = environ.get("QUEUE_URL").split(":")
         print(f"initialize. QUEUE_URL:'{host}:{port}'")
         self.conn = pika.BlockingConnection(pika.ConnectionParameters(host, port))
         self.channel = self.conn.channel()
         self.id = id_
+        if config['process_time']  == "rnd":
+            self.min_time = config["rnd"]["min"]
+            self.max_time = config["rnd"]["max"]
+        else:
+            self.min_time = config["process_time"]
+            self.max_time = config["process_time"]
 
     def consume(self):
         self.channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic")
@@ -47,7 +53,7 @@ class Processor:
         print(f"processor {self.id} got message with route {method.routing_key}")
         if method.routing_key == Routes.TASK_REQUESTS:
             print("process", data)
-            spend_time = randint(3, 10) * 10
+            spend_time = randint(self.min_time, self.max_time) * 10
 
             self.send_to_queue(MessageTypes.start, data["id"])
             for i in tqdm(range(spend_time)):
@@ -73,8 +79,13 @@ class Processor:
         )
         connection.close()
 
+def read_config():
+    with open('./config.json') as f:
+        config = json.load(f)
+        return config
 
 if __name__ == "__main__":
     id_ = uuid4().hex
-    p = Processor(id_)
+    config =read_config()
+    p = Processor(id_, config)
     p.consume()
