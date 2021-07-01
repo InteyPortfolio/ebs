@@ -1,0 +1,2 @@
+EVENTS = "events"
+# TASKS = "tasks"
