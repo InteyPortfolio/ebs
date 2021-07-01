@@ -1,15 +1,15 @@
-import pika
+# import pika
 from os import environ
 import json
 import time
 from uuid import uuid4
 from tqdm import tqdm
 from random import randint
-
-
-class Routes:
-    TASK_REQUESTS = "tasks-requests"
-    PROCESSING = "processing"
+from bus.kafka_consumer import Consumer, Producer
+from bus.topics import EVENTS
+from dataclasses import dataclass, asdict
+import asyncio
+from loguru import logger
 
 
 class MessageTypes:
@@ -17,64 +17,53 @@ class MessageTypes:
     finish = "END_PROCESSING"
 
 
-EXCHANGE = "ebs"
+@dataclass
+class ProcessingStarted:
+    task_id: str
+    type: str = "ProcessingStarted"
+
+
+@dataclass
+class ProcessingFinished:
+    task_id: str
+    spend_time: str
+    type: str = "ProcessingFinished"
 
 
 class Processor:
     def __init__(self, id_: str):
         host, port = environ.get("QUEUE_URL").split(":")
-        print(f"initialize. QUEUE_URL:'{host}:{port}'")
-        self.conn = pika.BlockingConnection(pika.ConnectionParameters(host, port))
-        self.channel = self.conn.channel()
-        self.id = id_
+        self.consumer = Consumer(brokers=[f"{host}:{port}"],
+                                 topic_name=EVENTS,
+                                 handler=self.callback,
+                                 # join consumers for concurrent processing
+                                 group_id="processors")
 
-    def consume(self):
-        self.channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic")
-        result = self.channel.queue_declare("processor_consume")
-        queue_name = result.method.queue
-        self.channel.queue_bind(
-            exchange=EXCHANGE, queue=queue_name, routing_key=Routes.TASK_REQUESTS
-        )
+        self.producer = Producer(brokers=[f"{host}:{port}"],
+                                 topic_name=EVENTS)
 
-        self.channel.basic_consume(
-            queue=queue_name, on_message_callback=self.callback, auto_ack=True
-        )
+    async def consume(self):
+        loop = asyncio.get_running_loop()
+        await self.consumer._start_consume(loop)
 
-        self.channel.start_consuming()
+    async def callback(self, body):
+        logger.debug("start processing")
+        """ reads message and start processing """
+        data = json.loads(body)
+        print("process", data)
+        spend_time = randint(3, 10) * 10 # from 3 to 10 seconds
 
-    def callback(self, ch, method, properties, body):
-        data = json.loads(body.decode("utf8"))
-        print(f"processor {self.id} got message with route {method.routing_key}")
-        if method.routing_key == Routes.TASK_REQUESTS:
-            print("process", data)
-            spend_time = randint(3, 10) * 10
+        await self.producer.send(ProcessingStarted(task_id=data["id"]))
+        for i in tqdm(range(spend_time)):
+            time.sleep(0.1)
+        await self.producer.send(ProcessingFinished(task_id=data["id"], spend_time=spend_time))
+        logger.debug("processing done")
 
-            self.send_to_queue(MessageTypes.start, data["id"])
-            for i in tqdm(range(spend_time)):
-                time.sleep(0.1)
-            self.send_to_queue(MessageTypes.finish, data["id"], spend_time)
-
-    def send_to_queue(self, msg_type: str, obj_id: str, time=None):
-        host, port = environ.get("QUEUE_URL").split(":")
-        connection = pika.BlockingConnection(pika.ConnectionParameters(host, port))
-        channel = connection.channel()
-        channel.exchange_declare(exchange=EXCHANGE, exchange_type="topic")
-        result = channel.queue_declare("processor_results")
-        channel.queue_bind(
-            exchange=EXCHANGE, queue=result.method.queue, routing_key=Routes.PROCESSING
-        )
-
-        data = dict(type=msg_type, target=obj_id, processor=self.id)
-        if time is None:
-            data["spend"] = time
-
-        channel.basic_publish(
-            exchange=EXCHANGE, routing_key=Routes.PROCESSING, body=json.dumps(data)
-        )
-        connection.close()
-
-
-if __name__ == "__main__":
+async def main():
     id_ = uuid4().hex
     p = Processor(id_)
-    p.consume()
+    await p.consume()
+
+if __name__ == "__main__":
+
+    asyncio.run(main())
